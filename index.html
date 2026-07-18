@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simple POS</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- LOCK SCREEN — blocks everything until an operator is chosen.
+     Skipped automatically if there's no staff yet, so a brand-new
+     install isn't locked out before anyone exists to sign in as. -->
+<div id="lockScreen" class="lock-screen hidden">
+  <div class="lock-box">
+    <h1 id="lockShopName">Print Shop</h1>
+    <p>Select who's using this device</p>
+    <div id="lockStaffList" class="lock-staff-list"></div>
+  </div>
+</div>
+
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <h1 id="shopNameLabel">Print Shop</h1>
+      <p>Simple POS</p>
+    </div>
+    <div class="operator-box">
+      <span id="currentOperatorName">-- No operator --</span>
+      <span>
+        <button class="btn btn-sm" onclick="openStaffSwitchModal()">Switch</button>
+        <button class="btn btn-sm" onclick="lockApp()" title="Lock this device">🔒</button>
+      </span>
+    </div>
+    <button class="nav-btn active" data-page="dashboard" onclick="goToPage('dashboard')">Dashboard</button>
+
+    <div class="nav-group-label">Daily operations</div>
+    <button class="nav-btn" data-page="pos" onclick="goToPage('pos')">Checkout</button>
+    <button class="nav-btn" data-page="history" onclick="goToPage('history')">Sales History</button>
+    <button class="nav-btn" data-page="workOrders" onclick="goToPage('workOrders')">Work Orders</button>
+    <button class="nav-btn" data-page="delivery" onclick="goToPage('delivery')">Delivery</button>
+    <button class="nav-btn" data-page="rejects" onclick="goToPage('rejects')">Rejects</button>
+
+    <div class="nav-group-label">Sales documents</div>
+    <button class="nav-btn" data-page="quotations" onclick="goToPage('quotations')">Quotations</button>
+    <button class="nav-btn" data-page="purchaseOrders" onclick="goToPage('purchaseOrders')">LPO / Purchase Orders</button>
+
+    <div class="nav-group-label">Catalog</div>
+    <button class="nav-btn" data-page="services" onclick="goToPage('services')">Services & Items</button>
+    <button class="nav-btn" data-page="inventory" onclick="goToPage('inventory')">Inventory</button>
+
+    <div class="nav-group-label">People</div>
+    <button class="nav-btn" data-page="customers" onclick="goToPage('customers')">Customers</button>
+    <button class="nav-btn" data-page="staff" onclick="goToPage('staff')">Staff & Payroll</button>
+
+    <div class="nav-group-label">System</div>
+    <button class="nav-btn" data-page="settings" onclick="goToPage('settings')">Settings</button>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <section id="page-dashboard" class="page active">
+      <div class="page-head">
+        <div>
+          <h2>Dashboard</h2>
+          <p>Today at a glance.</p>
+        </div>
+      </div>
+
+      <div class="stat-grid" id="dashboardStats"></div>
+      <div class="stat-grid" id="dashboardPeriodStats"></div>
+
+      <div class="card">
+        <h3 style="margin-top:0;">Business overview</h3>
+        <p style="font-size:12px;color:var(--ink-soft);margin-top:0;">Every part of the app, at a glance.</p>
+        <div class="stat-grid" id="dashboardOverview"></div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0;">Last 7 days</h3>
+        <div id="dashboardTrend"></div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0;">Top items (last 7 days)</h3>
+        <div id="dashboardTopItems"></div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0;">Recent sales</h3>
+        <div id="dashboardRecentSales"></div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0;">Orders in production</h3>
+        <div id="dashboardProduction"></div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0;">Low stock</h3>
+        <div id="dashboardLowStock"></div>
+      </div>
+    </section>
+
+    <!-- POS / CHECKOUT -->
+    <section id="page-pos" class="page">
+      <div class="page-head">
+        <div>
+          <h2>Checkout</h2>
+          <p>Tap items to add them to the sale.</p>
+        </div>
+        <input type="search" id="posSearch" placeholder="🔍 Search items..." style="max-width:240px;" oninput="renderPosGrid()">
+      </div>
+
+      <div class="pos-layout">
+        <div class="pos-grid" id="posGrid"></div>
+
+        <div class="cart-panel">
+          <div id="cartLines" style="margin-top:10px;">
+            <div class="empty-state">No items yet — tap something to start a sale.</div>
+          </div>
+
+          <div class="cart-totals">
+            <div class="cart-totals-row"><span>Subtotal</span><span class="money" id="cartSubtotal">QR0.00</span></div>
+            <div class="cart-totals-row">
+              <span>Discount</span>
+              <input type="number" id="cartDiscount" value="0" min="0" style="width:90px;text-align:right;" oninput="renderCart()">
+            </div>
+            <div class="cart-totals-row grand"><span>Total</span><span class="money" id="cartTotal">QR0.00</span></div>
+          </div>
+
+          <button class="btn btn-primary" style="width:100%;margin-top:12px;" onclick="openCheckoutModal()">Charge</button>
+          <button class="btn" style="width:100%;margin-top:8px;" onclick="clearCart()">Clear sale</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SERVICES & ITEMS -->
+    <section id="page-services" class="page">
+      <div class="page-head">
+        <div>
+          <h2>Services & Items</h2>
+          <p>What you sell, and what materials each item uses.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openServiceModal()">+ New service</button>
+      </div>
+      <div id="servicesList"></div>
+    </section>
+
+    <!-- INVENTORY -->
+    <section id="page-inventory" class="page">
+      <div class="page-head">
+        <div>
+          <h2>Inventory</h2>
+          <p>Materials and stock on hand.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openInventoryModal()">+ New material</button>
+      </div>
+      <div class="card">
+        <table class="simple-table" id="inventoryTable">
+          <thead><tr><th>Material</th><th>Stock</th><th>Restock at</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- HISTORY -->
+    <section id="page-history" class="page">
+      <div class="page-head">
+        <div>
+          <h2>Sales History</h2>
+          <p>Every sale, from newest to oldest.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openManualInvoiceModal()">+ New invoice</button>
+      </div>
+      <div class="card">
+        <table class="simple-table" id="historyTable">
+          <thead><tr><th>Invoice</th><th>Date</th><th>Staff</th><th>Client</th><th>Total</th><th>Status</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- REJECTS -->
+    <section id="page-rejects" class="page">
+      <div class="page-head">
+        <div>
+          <h2>Rejects</h2>
+          <p>Misprints, spoiled jobs, and other mistakes — logged so they show up in cost and stock.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openRejectModal()">+ Log a reject</button>
+      </div>
+
+      <div class="stat-grid" id="rejectsStats"></div>
+
+      <div class="card">
+        <table class="simple-table" id="rejectsTable">
+          <thead><tr><th>Date</th><th>Item</th><th>Qty</th><th>Reason</th><th>Staff</th><th>Cost</th><th>Payroll</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- WORK ORDERS -->
+    <section id="page-workOrders" class="page">
+      <div class="page-head">
+        <div>
+          <h2>Work Orders</h2>
+          <p>Internal production tickets — what's being made, for who, by when.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openWorkOrderModal()">+ New work order</button>
+      </div>
+      <div class="card">
+        <table class="simple-table" id="workOrdersTable">
+          <thead><tr><th>Work Order</th><th>Client</th><th>Assigned</th><th>Due</th><th>Status</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- DELIVERY -->
+    <section id="page-delivery" class="page">
+      <div class="page-head">
+        <div>
+          <h2>Delivery</h2>
+          <p>What's going out, to where, with whom.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openDeliveryModal()">+ New delivery</button>
+      </div>
+      <div class="card">
+        <table class="simple-table" id="deliveriesTable">
+          <thead><tr><th>Client</th><th>Address</th><th>Contact</th><th>Assigned</th><th>Scheduled</th><th>Status</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- QUOTATIONS -->
+    <section id="page-quotations" class="page">
+      <div class="page-head">
+        <div>
+          <h2>Quotations</h2>
+          <p>Pre-sale estimates. Nothing here affects stock or sales until it becomes a real Checkout or Invoice.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openQuotationModal()">+ New quotation</button>
+      </div>
+      <div class="card">
+        <table class="simple-table" id="quotationsTable">
+          <thead><tr><th>Quote</th><th>Date</th><th>Client</th><th>Total</th><th>Status</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- LPO / PURCHASE ORDERS -->
+    <section id="page-purchaseOrders" class="page">
+      <div class="page-head">
+        <div>
+          <h2>LPO / Purchase Orders</h2>
+          <p>Client LPOs authorizing a job, and your own purchase orders to suppliers.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openPurchaseOrderModal()">+ New</button>
+      </div>
+      <div style="margin-bottom:10px;">
+        <button class="btn btn-sm btn-primary" data-po-view="all" onclick="setPOView('all')">All</button>
+        <button class="btn btn-sm" data-po-view="incoming" onclick="setPOView('incoming')">Client LPOs</button>
+        <button class="btn btn-sm" data-po-view="outgoing" onclick="setPOView('outgoing')">Supplier POs</button>
+      </div>
+      <div class="card">
+        <table class="simple-table" id="purchaseOrdersTable">
+          <thead><tr><th>Type</th><th>Reference</th><th>Date</th><th>Party</th><th>Total</th><th>Status</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- STAFF -->
+    <section id="page-staff" class="page">
+      <div class="page-head">
+        <div>
+          <h2>Staff & Payroll</h2>
+          <p>Who's on the team, what they earn, and what they've been paid.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openStaffModal()">+ New staff</button>
+      </div>
+
+      <div class="card">
+        <table class="simple-table" id="staffTable">
+          <thead><tr><th>Name</th><th>Position</th><th>Pay basis</th><th>Active</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0;">Commission earned</h3>
+        <div class="field-row">
+          <div>
+            <label class="field-label">Staff</label>
+            <select id="commissionStaffSelect"></select>
+          </div>
+          <div>
+            <label class="field-label">From</label>
+            <input type="date" id="commissionFrom">
+          </div>
+          <div>
+            <label class="field-label">To</label>
+            <input type="date" id="commissionTo">
+          </div>
+          <div style="display:flex;align-items:flex-end;">
+            <button class="btn btn-primary" style="width:100%;" onclick="renderCommissionReport()">Calculate</button>
+          </div>
+        </div>
+        <div id="commissionResult"></div>
+      </div>
+
+      <div class="card">
+        <div class="page-head" style="margin-bottom:10px;">
+          <h3 style="margin:0;">Advances, bonuses & deductions</h3>
+          <button class="btn btn-primary" onclick="openAdjustmentModal()">+ Log entry</button>
+        </div>
+        <p style="font-size:12px;color:var(--ink-soft);margin-top:0;">Log these whenever they happen. Still-open entries get auto-found the next time you run payroll for that staff member.</p>
+        <div style="margin-bottom:10px;">
+          <button class="btn btn-sm btn-primary" data-adj-view="open" onclick="setAdjustmentsView('open')">Open</button>
+          <button class="btn btn-sm" data-adj-view="used" onclick="setAdjustmentsView('used')">Used in payroll</button>
+          <button class="btn btn-sm" data-adj-view="all" onclick="setAdjustmentsView('all')">All</button>
+        </div>
+        <table class="simple-table" id="adjustmentsTable">
+          <thead><tr><th>Date</th><th>Staff</th><th>Type</th><th>Category</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0;">Employee ledger</h3>
+        <p style="font-size:12px;color:var(--ink-soft);margin-top:0;">Full running history for one person — payroll runs plus every advance, bonus, and deduction.</p>
+        <div class="field-row">
+          <div>
+            <label class="field-label">Staff</label>
+            <select id="ledgerStaffSelect" onchange="renderEmployeeLedger()"></select>
+          </div>
+          <div>
+            <label class="field-label">From</label>
+            <input type="date" id="ledgerFrom" onchange="renderEmployeeLedger()">
+          </div>
+          <div>
+            <label class="field-label">To</label>
+            <input type="date" id="ledgerTo" onchange="renderEmployeeLedger()">
+          </div>
+        </div>
+        <div id="ledgerResult"></div>
+      </div>
+
+      <div class="card">
+        <div class="page-head" style="margin-bottom:10px;">
+          <h3 style="margin:0;">Payroll</h3>
+          <button class="btn btn-primary" onclick="openPayrollRunModal()">+ Run payroll</button>
+        </div>
+        <p style="font-size:12px;color:var(--ink-soft);margin-top:0;">Basic + accommodation + transportation (each toggleable per run) + unpaid commission − any rejects attributed to them − any deductions, + any bonuses.</p>
+        <table class="simple-table" id="payrollHistoryTable">
+          <thead><tr><th>Staff</th><th>Period</th><th>Salary</th><th>Commission</th><th>Rejects</th><th>Net pay</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- CUSTOMERS -->
+    <section id="page-customers" class="page">
+      <div class="page-head">
+        <div>
+          <h2>Customers</h2>
+          <p>Repeat clients — added automatically at checkout, or here.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openCustomerModal()">+ New customer</button>
+      </div>
+      <div class="card">
+        <table class="simple-table" id="customersTable">
+          <thead><tr><th>Name</th><th>Phone</th><th>Orders</th><th>Total spent</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="page-settings" class="page">
+      <div class="page-head">
+        <div>
+          <h2>Settings</h2>
+          <p>Backup, restore, and export your data.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0;">Shop info</h3>
+        <label class="field-label">Shop name (shown on receipts and the sidebar)</label>
+        <div class="field-row">
+          <input type="text" id="shopNameInput" value="Print Shop">
+          <button class="btn btn-primary" onclick="saveShopName()">Save</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0;">Backup & restore</h3>
+        <p style="font-size:13px;color:var(--ink-soft);">Everything lives in this browser only. Back up regularly — especially before clearing browser data or switching devices.</p>
+        <button class="btn btn-primary" onclick="exportBackup()">⬇ Download full backup</button>
+        <label class="btn" style="display:inline-block;margin-left:8px;">
+          ⬆ Restore from backup
+          <input type="file" accept="application/json" style="display:none;" onchange="importBackup(this)">
+        </label>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0;">Export reports (CSV)</h3>
+        <button class="btn" onclick="exportSalesCsv()">Sales history</button>
+        <button class="btn" onclick="exportInventoryCsv()">Inventory</button>
+        <button class="btn" onclick="exportRejectsCsv()">Rejects</button>
+        <button class="btn" onclick="exportPayrollCsv()">Payroll</button>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- MODALS get injected here by each module -->
+<div id="modalRoot"></div>
+
+<script src="db.js"></script>
+<script src="app.js"></script>
+<script src="services.js"></script>
+<script src="inventory.js"></script>
+<script src="pos.js"></script>
+<script src="invoice.js"></script>
+<script src="history.js"></script>
+<script src="rejects.js"></script>
+<script src="workorders.js"></script>
+<script src="delivery.js"></script>
+<script src="quotations.js"></script>
+<script src="purchaseorders.js"></script>
+<script src="staff.js"></script>
+<script src="payroll.js"></script>
+<script src="adjustments.js"></script>
+<script src="ledger.js"></script>
+<script src="customers.js"></script>
+<script src="backup.js"></script>
+<script src="reports.js"></script>
+<script src="dashboard.js"></script>
+</body>
+</html>
