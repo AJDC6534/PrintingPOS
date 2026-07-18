@@ -1,0 +1,451 @@
+/* =========================================================
+   DESIGN TOKENS
+   Paper background, ink-navy sidebar, stamp-orange for actions.
+   Money always renders in the mono face, like a receipt.
+========================================================= */
+:root {
+  --paper: #F7F5F0;
+  --paper-raised: #FFFFFF;
+  --ink: #232323;
+  --ink-soft: #6B6B63;
+  --line: #E4E0D6;
+  --navy: #16323F;
+  --navy-soft: #24495A;
+  --stamp: #E4572E;
+  --stamp-dark: #C43F1B;
+  --good: #2E7D5B;
+  --warn: #C43F1B;
+  --radius: 10px;
+  --font-ui: -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: var(--font-ui);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 14px;
+}
+button {
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+input, select {
+  font-family: inherit;
+  font-size: 14px;
+}
+.money { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.hidden { display: none !important; }
+
+/* =========================================================
+   APP SHELL
+========================================================= */
+.app-shell {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: 100vh;
+}
+
+.sidebar {
+  background: var(--navy);
+  color: #EAF1F4;
+  padding: 20px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sidebar-brand {
+  padding: 4px 10px 20px;
+}
+.sidebar-brand h1 {
+  font-size: 16px;
+  margin: 0;
+  letter-spacing: .3px;
+}
+.sidebar-brand p {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: #9FB4BD;
+}
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  background: transparent;
+  color: #C9D8DD;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  font-weight: 600;
+}
+.nav-btn:hover { background: var(--navy-soft); color: #fff; }
+.nav-btn.active { background: var(--stamp); color: #fff; }
+
+.main {
+  padding: 24px 28px 60px;
+  overflow-y: auto;
+}
+.page { display: none; }
+.page.active { display: block; }
+
+.page-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.page-head h2 { margin: 0; font-size: 20px; }
+.page-head p { margin: 2px 0 0; color: var(--ink-soft); font-size: 13px; }
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+.btn {
+  border: 0;
+  border-radius: var(--radius);
+  padding: 10px 16px;
+  font-weight: 700;
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+.btn:hover { border-color: var(--ink-soft); }
+.btn-primary { background: var(--stamp); color: #fff; border-color: var(--stamp); }
+.btn-primary:hover { background: var(--stamp-dark); border-color: var(--stamp-dark); }
+.btn-danger { color: var(--warn); }
+.btn-sm { padding: 6px 10px; font-size: 12px; }
+.btn-icon { padding: 6px 9px; }
+
+/* =========================================================
+   CARDS / SURFACES
+========================================================= */
+.card {
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+}
+.card + .card { margin-top: 14px; }
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.stat-card {
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+}
+.stat-card .stat-label { font-size: 12px; color: var(--ink-soft); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.stat-card .stat-value { font-size: 26px; font-weight: 700; margin-top: 4px; }
+.stat-card.warn .stat-value { color: var(--warn); }
+
+/* =========================================================
+   FORM ELEMENTS
+========================================================= */
+input[type=text], input[type=number], input[type=date], input[type=search], select, textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 9px 10px;
+  background: #fff;
+}
+label.field-label { font-size: 12px; font-weight: 700; color: var(--ink-soft); display: block; margin-bottom: 4px; }
+.field-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 12px; }
+
+/* =========================================================
+   TABLES
+========================================================= */
+table.simple-table { width: 100%; border-collapse: collapse; }
+table.simple-table th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--ink-soft);
+  padding: 8px 10px;
+  border-bottom: 2px solid var(--line);
+}
+table.simple-table td {
+  padding: 10px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+table.simple-table tr:last-child td { border-bottom: none; }
+.empty-state { text-align: center; padding: 30px; color: var(--ink-soft); }
+
+/* status pills */
+.pill { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.pill-paid { background: #E4F3EC; color: var(--good); }
+.pill-balance { background: #FDEEE7; color: var(--stamp-dark); }
+.pill-unpaid { background: #F3E7E7; color: var(--warn); }
+.pill-low { background: #FDEEE7; color: var(--stamp-dark); }
+
+/* =========================================================
+   MODALS
+========================================================= */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(22, 50, 63, .55);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100;
+  padding: 20px;
+}
+.modal-box {
+  background: var(--paper-raised);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+}
+.modal-box.modal-wide { max-width: 760px; }
+.modal-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.modal-head h3 { margin: 0; font-size: 17px; }
+.modal-close { border: 0; background: none; font-size: 20px; color: var(--ink-soft); }
+.modal-body { padding: 18px 20px; overflow-y: auto; }
+.modal-foot {
+  padding: 14px 20px;
+  border-top: 1px solid var(--line);
+  display: flex; justify-content: flex-end; gap: 10px;
+}
+
+/* =========================================================
+   SERVICES / ITEMS
+========================================================= */
+.service-card { margin-bottom: 12px; }
+.service-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+.service-header h3 { margin: 0; font-size: 15px; }
+.service-items { display: none; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 14px; }
+.service-items.expanded { display: grid; }
+.item-tile {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  background: var(--paper);
+}
+.item-tile .item-name { font-weight: 700; }
+.item-tile .item-meta { font-size: 12px; color: var(--ink-soft); margin-top: 4px; }
+.item-tile .item-actions { margin-top: 10px; display: flex; gap: 6px; }
+
+/* materials tick-and-type checklist, carried over from the audit */
+.checklist-search { margin-bottom: 8px; }
+.checklist-summary { font-size: 12px; font-weight: 700; color: var(--ink-soft); margin-bottom: 6px; }
+.checklist-box {
+  max-height: 200px; overflow-y: auto;
+  border: 1px solid var(--line); border-radius: 10px;
+  padding: 4px;
+}
+.check-row {
+  display: grid; grid-template-columns: auto 1fr 90px;
+  align-items: center; gap: 10px;
+  padding: 7px 8px; border-radius: 8px; cursor: pointer;
+}
+.check-row:hover { background: var(--paper); }
+.check-row.is-checked { background: #ECF3EC; }
+.check-row input[type=number] { text-align: right; }
+.check-row input[type=number]:disabled { background: var(--paper); color: #BDBDB4; }
+
+/* =========================================================
+   POS / CHECKOUT
+========================================================= */
+.pos-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 18px;
+  align-items: start;
+}
+.pos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+.pos-tile {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  background: var(--paper-raised);
+  text-align: left;
+}
+.pos-tile:hover { border-color: var(--stamp); }
+.pos-tile .pos-tile-name { font-weight: 700; font-size: 13px; }
+.pos-tile .pos-tile-price { color: var(--stamp-dark); font-weight: 700; margin-top: 6px; }
+
+.cart-panel {
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  position: sticky;
+  top: 16px;
+}
+.cart-line { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.cart-line .cart-line-name { flex: 1; font-size: 13px; }
+.cart-line .qty-btn { width: 26px; height: 26px; border-radius: 7px; border: 1px solid var(--line); background: #fff; }
+.cart-line .cart-line-sub { width: 64px; text-align: right; font-size: 13px; }
+.cart-totals { margin-top: 10px; padding-top: 10px; border-top: 2px solid var(--line); }
+.cart-totals-row { display: flex; justify-content: space-between; margin: 4px 0; font-size: 13px; }
+.cart-totals-row.grand { font-size: 18px; font-weight: 700; margin-top: 6px; }
+
+/* =========================================================
+   RECEIPT (print)
+========================================================= */
+.receipt-preview { font-family: var(--font-mono); font-size: 12px; }
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+@media (max-width: 900px) {
+  .app-shell { grid-template-columns: 1fr; }
+  .sidebar { flex-direction: row; overflow-x: auto; }
+  .nav-group-label { display: none; }
+  .pos-layout { grid-template-columns: 1fr; }
+  .cart-panel { position: static; }
+}
+
+/* =========================================================
+   DASHBOARD — 7-day trend bars (plain CSS, no chart library)
+========================================================= */
+.trend-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 140px;
+  padding-top: 10px;
+}
+.trend-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.trend-bar {
+  width: 100%;
+  max-width: 34px;
+  background: var(--stamp);
+  border-radius: 6px 6px 2px 2px;
+  min-height: 3px;
+}
+.trend-bar-label {
+  font-size: 11px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+.trend-bar-value {
+  font-size: 10px;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+}
+
+.recent-sale-row, .top-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+.recent-sale-row:last-child, .top-item-row:last-child { border-bottom: none; }
+.top-item-rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--paper);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  margin-right: 8px;
+}
+
+/* =========================================================
+   OPERATOR SESSION (POS page)
+========================================================= */
+.operator-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 9px;
+  padding: 9px 10px;
+  margin: 0 4px 14px;
+  background: rgba(255,255,255,0.06);
+  font-weight: 700;
+  color: #EAF1F4;
+  font-size: 13px;
+}
+.operator-box .btn { background: var(--stamp); color: #fff; border-color: var(--stamp); }
+
+/* refund/void pill */
+.pill-refunded { background: #ECE9E4; color: var(--ink-soft); text-decoration: line-through; }
+
+/* production status */
+.pill-production { background: #FFF3D6; color: #9A6B00; }
+
+/* =========================================================
+   SIDEBAR NAV GROUPS
+========================================================= */
+.nav-group-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #6E8892;
+  padding: 14px 12px 4px;
+}
+
+/* =========================================================
+   LOCK SCREEN — blocks the whole app until an operator signs in
+========================================================= */
+.lock-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: var(--navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.lock-screen.hidden { display: none; }
+.lock-box {
+  background: var(--paper-raised);
+  border-radius: 16px;
+  padding: 32px 28px;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+}
+.lock-box h1 { margin: 0 0 4px; font-size: 20px; color: var(--ink); }
+.lock-box > p { margin: 0 0 20px; color: var(--ink-soft); font-size: 13px; }
+.lock-staff-list {
+  display: grid;
+  gap: 10px;
+}
+.lock-staff-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+}
+.lock-staff-btn:hover { border-color: var(--stamp); }
