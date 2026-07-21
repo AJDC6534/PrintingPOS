@@ -30,18 +30,17 @@ function applyRoleBasedUI() {
 }
 
 function goToPage(pageId) {
-  // Bootstrap exception: with zero staff ever created, nothing is
-  // restricted — otherwise nobody could ever reach Staff & Payroll to
-  // create the first person to sign in as.
-  if (anyStaffExist) {
-    if (!currentOperatorId && pageId !== "dashboard") {
-      showLockScreen();
-      return;
-    }
-    if (MANAGER_ONLY_PAGES.includes(pageId) && !currentOperatorIsManager) {
-      alert("Only a Manager can access this. Use \"Switch\" at the top of the sidebar and sign in as a Manager first.");
-      return;
-    }
+  if (!anyStaffExist) {
+    showSetupScreen();
+    return;
+  }
+  if (!currentOperatorId) {
+    showLockScreen();
+    return;
+  }
+  if (MANAGER_ONLY_PAGES.includes(pageId) && !currentOperatorIsManager) {
+    alert("Only a Manager can access this. Use \"Switch\" at the top of the sidebar and sign in as a Manager first.");
+    return;
   }
 
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
@@ -86,22 +85,56 @@ async function initApp() {
   if (saved?.value) shopName = saved.value;
   document.getElementById("shopNameLabel").textContent = shopName;
   applyRoleBasedUI(); // no one's signed in yet — start in the restricted view
-  await maybeShowLockScreen();
+  await checkAccessOnStartup();
   await renderDashboard();
 }
 
 /***********************************
- * LOCK SCREEN
- * The whole app is unusable until an operator is chosen — not just
- * the Manager-only pages. The one deliberate exception: a brand-new
- * install with zero staff skips the lock, since otherwise nobody
- * could ever get in to create the first staff member.
+ * FIRST-RUN SETUP
+ * A brand-new install (zero staff) doesn't get free access to poke
+ * around — it goes straight to creating the Manager account, since
+ * that's the only account that can manage staff, payroll, and delete
+ * anything. Everything else (adding more staff, PINs for them, etc.)
+ * happens afterward from Staff & Payroll, once signed in as Manager.
  ***********************************/
-async function maybeShowLockScreen() {
+async function checkAccessOnStartup() {
   const staff = await dbGetAll("staff");
   anyStaffExist = staff.length > 0;
-  if (!staff.length) return; // nothing to sign in as yet — let them in to set up staff
+  if (!anyStaffExist) { showSetupScreen(); return; }
   showLockScreen();
+}
+
+function showSetupScreen() {
+  document.getElementById("setupShopName").textContent = shopName;
+  document.getElementById("setupScreen").classList.remove("hidden");
+}
+
+function hideSetupScreen() {
+  document.getElementById("setupScreen").classList.add("hidden");
+}
+
+async function createManagerAccount() {
+  const name = document.getElementById("setupManagerName").value.trim();
+  const pin = document.getElementById("setupManagerPin").value.trim();
+
+  if (!name) return alert("Enter your name.");
+  if (!/^\d{4,6}$/.test(pin)) return alert("Create a PIN, 4-6 digits.");
+
+  const id = await dbPut("staff", {
+    name, position: "Manager", isManager: true, active: true,
+    salaryType: "None", basicSalary: 0, accommodation: 0, transportation: 0, pin
+  });
+
+  anyStaffExist = true;
+  currentOperatorId = id;
+  currentOperatorName = name;
+  currentOperatorIsManager = true;
+  staffCache = await dbGetAll("staff"); // keep the shared cache in sync for authorizePin() and other pages
+
+  hideSetupScreen();
+  renderOperatorDisplay();
+  applyRoleBasedUI();
+  renderDashboard();
 }
 
 function showLockScreen() {
@@ -125,6 +158,7 @@ function hideLockScreen() {
 
 function lockApp() {
   currentOperatorId = null;
+  currentOperatorName = null;
   currentOperatorIsManager = false;
   renderOperatorDisplay();
   applyRoleBasedUI();

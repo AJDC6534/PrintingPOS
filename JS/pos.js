@@ -5,6 +5,7 @@
 let posItemsCache = []; // flattened list of every item across every service
 let cart = [];          // [{ key, name, price, qty, commission, materials }]
 let currentOperatorId = null;
+let currentOperatorName = null; // set directly at sign-in — avoids depending on staffCache being in sync
 
 async function renderPosPage() {
   const services = await dbGetAll("services");
@@ -23,8 +24,7 @@ async function renderPosPage() {
 function renderOperatorDisplay() {
   const label = document.getElementById("currentOperatorName");
   if (!label) return;
-  const staff = staffCache.find(s => s.id === currentOperatorId);
-  label.textContent = staff ? staff.name : "-- No operator --";
+  label.textContent = currentOperatorId && currentOperatorName ? currentOperatorName : "-- No operator --";
 }
 
 // Switching who's ringing up sales requires that person's PIN if they
@@ -56,7 +56,9 @@ async function selectOperator(staffId) {
   }
 
   currentOperatorId = staffId;
+  currentOperatorName = staff.name;
   currentOperatorIsManager = !!staff.isManager;
+  staffCache = staffList; // keep the shared cache in sync — authorizePin() and other pages read from it
   closeModal();
   hideLockScreen();
   renderOperatorDisplay();

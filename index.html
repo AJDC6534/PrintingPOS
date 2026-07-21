@@ -4,13 +4,29 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Simple POS</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="CSS/style.css">
 </head>
 <body>
 
+<!-- FIRST-RUN SETUP — shown only when zero staff exist yet. Forces
+     creating the Manager account before anything else is reachable. -->
+<div id="setupScreen" class="lock-screen hidden">
+  <div class="lock-box">
+    <h1>Welcome to <span id="setupShopName">Print Shop</span></h1>
+    <p>Let's create your Manager account first. This is the only account that can manage staff, payroll, and delete anything — everything else can be added afterward.</p>
+
+    <label class="field-label" style="text-align:left;">Your name</label>
+    <input type="text" id="setupManagerName" placeholder="e.g. Ahmed Al-Sayed">
+
+    <label class="field-label" style="text-align:left;margin-top:10px;">Create a PIN (4-6 digits)</label>
+    <input type="text" id="setupManagerPin" inputmode="numeric" maxlength="6" placeholder="e.g. 1234">
+
+    <button class="btn btn-primary" style="width:100%;margin-top:16px;" onclick="createManagerAccount()">Create Manager Account</button>
+  </div>
+</div>
+
 <!-- LOCK SCREEN — blocks everything until an operator is chosen.
-     Skipped automatically if there's no staff yet, so a brand-new
-     install isn't locked out before anyone exists to sign in as. -->
+     Shown once at least one staff member exists (i.e. after setup). -->
 <div id="lockScreen" class="lock-screen hidden">
   <div class="lock-box">
     <h1 id="lockShopName">Print Shop</h1>
@@ -427,25 +443,25 @@
 <!-- MODALS get injected here by each module -->
 <div id="modalRoot"></div>
 
-<script src="db.js"></script>
-<script src="app.js"></script>
-<script src="services.js"></script>
-<script src="inventory.js"></script>
-<script src="pos.js"></script>
-<script src="invoice.js"></script>
-<script src="history.js"></script>
-<script src="rejects.js"></script>
-<script src="workorders.js"></script>
-<script src="delivery.js"></script>
-<script src="quotations.js"></script>
-<script src="purchaseorders.js"></script>
-<script src="staff.js"></script>
-<script src="payroll.js"></script>
-<script src="adjustments.js"></script>
-<script src="ledger.js"></script>
-<script src="customers.js"></script>
-<script src="backup.js"></script>
-<script src="reports.js"></script>
-<script src="dashboard.js"></script>
+<script src="JS/db.js"></script>
+<script src="JS/app.js"></script>
+<script src="JS/services.js"></script>
+<script src="JS/inventory.js"></script>
+<script src="JS/pos.js"></script>
+<script src="JS/invoice.js"></script>
+<script src="JS/history.js"></script>
+<script src="JS/rejects.js"></script>
+<script src="JS/workorders.js"></script>
+<script src="JS/delivery.js"></script>
+<script src="JS/quotations.js"></script>
+<script src="JS/purchaseorders.js"></script>
+<script src="JS/staff.js"></script>
+<script src="JS/payroll.js"></script>
+<script src="JS/adjustments.js"></script>
+<script src="JS/ledger.js"></script>
+<script src="JS/customers.js"></script>
+<script src="JS/backup.js"></script>
+<script src="JS/reports.js"></script>
+<script src="JS/dashboard.js"></script>
 </body>
 </html>
